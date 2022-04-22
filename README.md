@@ -1,3 +1,8 @@
+This fork has been modified from the original repo to add the following features:
+- Bug fix model files to allow CPU inference.
+- Bug fix to allow inference for batch size of 1.
+- Add `torch.hub` functionality to allow easier use of this model.
+
 # CurveNet
 Official implementation of "Walk in the Cloud: Learning Curves for Point Clouds Shape Analysis", ICCV 2021
 
@@ -7,6 +12,30 @@ Official implementation of "Walk in the Cloud: Learning Curves for Point Clouds 
 Paper: https://arxiv.org/abs/2105.01288
 
 ![CurveNet](./poster3.png)
+
+## Torch Hub quick start
+
+To get started with using CurveNet with the pretrained model on the ModelNet40 dataset, I provide torch hub functionality for this repo. So, if you have `torch`, `numpy` and  `scipy`, then you can simply run (without cloning the repo or anything):
+
+```python
+
+import torch 
+
+model = torch.hub.load('RF5/CurveNet', 'curvenet_cls_pretrained_modelnet40', 
+                            pretrained=True, device='cuda')
+# you can also use the untrained model with pretrained=False, or CPU inference with device='cpu'
+
+example_point_cloud = torch.randn((3, 1234))
+# add batch dimension
+example_point_cloud = example_point_cloud[None].cuda()
+# perform inference
+with torch.inference_mode():
+    logits = model(example_point_cloud) # (bs, n_classes=40)
+    # or we can extract intermediary features
+    features = model(example_point_cloud, return_feats=True) # (bs, 2048)
+```
+
+That's it! Trivial!
 
 ## Requirements
 - Python>=3.7
