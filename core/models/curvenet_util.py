@@ -181,7 +181,6 @@ class LPFA(nn.Module):
     def __init__(self, in_channel, out_channel, k, mlp_num=2, initial=False):
         super(LPFA, self).__init__()
         self.k = k
-        self.device = torch.device('cuda')
         self.initial = initial
 
         if not initial:
@@ -214,7 +213,7 @@ class LPFA(nn.Module):
         if idx is None:
             idx = knn(xyz, k=self.k)[:,:,:self.k]  # (batch_size, num_points, k)
 
-        idx_base = torch.arange(0, batch_size, device=self.device).view(-1, 1, 1) * num_points
+        idx_base = torch.arange(0, batch_size, device=x.device).view(-1, 1, 1) * num_points
         idx = idx + idx_base
         idx = idx.view(-1)
 
@@ -458,12 +457,11 @@ class CurveGrouping(nn.Module):
         # starting point selection in self attention style
         x_att = torch.sigmoid(self.att(x))
         x = x * x_att
-
         _, start_index = torch.topk(x_att,
                                     self.curve_num,
                                     dim=2,
                                     sorted=False)
-        start_index = start_index.squeeze().unsqueeze(2)
+        start_index = start_index.squeeze(1).unsqueeze(2)
 
         curves = self.walk(xyz, x, idx, start_index)  #bs, c, c_n, c_l
         

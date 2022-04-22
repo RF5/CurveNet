@@ -85,7 +85,7 @@ class Walk(nn.Module):
         x = x.transpose(1,2).contiguous() # bs, n, c
 
         flatten_x = x.view(bn * tot_points, -1)
-        batch_offset = torch.arange(0, bn, device=torch.device('cuda')).detach() * tot_points
+        batch_offset = torch.arange(0, bn, device=x.device).detach() * tot_points
 
         # indices of neighbors for the starting points
         tmp_adj = (adj + batch_offset.view(-1,1,1)).view(adj.size(0)*adj.size(1),-1) #bs, n, k
@@ -97,14 +97,13 @@ class Walk(nn.Module):
 
         # one step at a time
         for step in range(self.curve_length):
-
             if step == 0:
                 # get starting point features using flattend indices
                 starting_points =  flatten_x[flatten_cur, :].contiguous()
                 pre_feature = starting_points.view(bn, self.curve_num, -1, 1).transpose(1,2) # bs * n, c
             else:
                 # dynamic momentum
-                cat_feature = torch.cat((cur_feature.squeeze(), pre_feature.squeeze()),dim=1)
+                cat_feature = torch.cat((cur_feature.squeeze(-1), pre_feature.squeeze(-1)),dim=1)
                 att_feature = F.softmax(self.momentum_mlp(cat_feature),dim=1).view(bn, 1, self.curve_num, 2) # bs, 1, n, 2
                 cat_feature = torch.cat((cur_feature, pre_feature),dim=-1) # bs, c, n, 2
                 

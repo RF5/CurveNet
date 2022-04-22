@@ -46,9 +46,8 @@ class CurveNet(nn.Module):
         self.bn1 = nn.BatchNorm1d(512)
         self.dp1 = nn.Dropout(p=0.5)
 
-    def forward(self, xyz):
+    def forward(self, xyz, return_feats=False):
         l0_points = self.lpfa(xyz, xyz)
-
         l1_xyz, l1_points = self.cic11(xyz, l0_points)
         l1_xyz, l1_points = self.cic12(l1_xyz, l1_points)
 
@@ -66,6 +65,9 @@ class CurveNet(nn.Module):
         x_avg = F.adaptive_avg_pool1d(x, 1)
         
         x = torch.cat((x_max, x_avg), dim=1).squeeze(-1)
+        if return_feats:
+            return x
+        
         x = F.relu(self.bn1(self.conv1(x).unsqueeze(-1)), inplace=True).squeeze(-1)
         x = self.dp1(x)
         x = self.conv2(x)
