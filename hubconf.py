@@ -1,4 +1,4 @@
-dependencies = ['torch', 'numpy', 'sklearn']
+dependencies = ['torch', 'numpy']
 
 import torch
 import logging
