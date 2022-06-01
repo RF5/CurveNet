@@ -2,7 +2,11 @@ dependencies = ['torch', 'numpy', 'sklearn']
 
 import torch
 import logging
+import os
+from pathlib import Path
 from core.models.curvenet_cls import CurveNet
+
+THIS_FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def curvenet_cls_pretrained_modelnet40(pretrained=True, progress=True, device='cuda'):
     r""" 
@@ -21,7 +25,11 @@ def curvenet_cls_pretrained_modelnet40(pretrained=True, progress=True, device='c
     model = CurveNet()
     model = model.to(device).eval()
     if pretrained:
-        ckpt = torch.hub.load_state_dict_from_url("https://github.com/RF5/CurveNet/releases/download/v0.1/model.t7", 
+        try:
+            ckpt = torch.load(Path(THIS_FILE_PATH)/'model.t7', map_location=device)
+        except FileNotFoundError:
+            logging.info("Failed to load model weights locally, trying to fetch them from the internet.")
+            ckpt = torch.hub.load_state_dict_from_url("https://github.com/RF5/CurveNet/releases/download/v0.1/model.t7", 
                                                 map_location=device, progress=progress)
         ckpt = {k.replace('module.', ''): ckpt[k] for k in ckpt}
         model.load_state_dict(ckpt)
